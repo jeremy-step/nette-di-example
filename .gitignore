@@ -1,0 +1,10 @@
+.DS_Store
+.vscode
+.idea
+node_modules
+vendor
+.pnpm-store
+log
+*.log
+.phpunit.cache
+.phpunit.result.cache

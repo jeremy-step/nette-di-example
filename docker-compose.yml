@@ -1,0 +1,89 @@
+services:
+    web-server:
+        container_name: web-server
+        build:
+            dockerfile: ./.docker/httpd/Dockerfile
+        ports:
+            - "${FORWARD_SERVER_PORT:-8000}:80"
+        volumes:
+            - ./application:/var/www/html
+    application:
+        container_name: application
+        environment:
+            VITE_HOST: "application"
+            VITE_PORT: "5173"
+            MAILPIT_HOST: "mail"
+            MAILPIT_PORT: "1025"
+            MYSQL_HOST: "database"
+            MYSQL_PORT: "3306"
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+            REDIS_HOST: "cache"
+            REDIS_PORT: "6379"
+        build:
+            dockerfile: ./.docker/php-fpm/Dockerfile
+            target: with-node
+        volumes:
+            - ./.docker/php-fpm/conf/php.ini:/usr/local/etc/php/conf.d/php.ini:ro
+            - ./.docker/php-fpm/conf/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini:ro
+            - ./application:/var/www/html
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        depends_on:
+            - web-server
+    mail:
+        container_name: mail
+        image: axllent/mailpit:latest
+        ports:
+            - "${FORWARD_MAILPIT_UI_PORT:-8025}:8025"
+            - "${FORWARD_MAILPIT_SMTP_PORT:-1025}:1025"
+        volumes:
+            - mailpitdata:/data
+        restart: unless-stopped
+        depends_on:
+            - application
+    database:
+        container_name: database
+        environment:
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_USER: ${MYSQL_USER}
+            MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+            MYSQL_DATABASE: ${MYSQL_DATABASE}
+        image: mysql:8.4
+        ports:
+            - "${FORWARD_MYSQL_PORT:-3306}:3306"
+        volumes:
+            - mysqldata:/var/lib/mysql
+        restart: unless-stopped
+        command: [ "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci" ]
+    cache:
+        container_name: cache
+        image: redis:7.4-alpine
+        ports:
+            - "${FORWARD_REDIS_PORT:-6379}:6379"
+        volumes:
+            - redisdata:/data
+        restart: unless-stopped
+    adminer:
+        container_name: adminer
+        environment:
+            ADMINER_DEFAULT_SERVER: "database:3306"
+            ADMINER_DEFAULT_DRIVER: "server"
+            ADMINER_DEFAULT_USER: ${MYSQL_USER}
+            ADMINER_DEFAULT_DATABASE: ${MYSQL_DATABASE}
+            ADMINER_DEFAULT_PASSWORD: ${MYSQL_PASSWORD}
+            ADMINER_PLUGINS: ${ADMINER_PLUGINS:-dark-switcher prism table-indexes-structure table-structure}
+        image: adminer:latest
+        ports:
+            - "${FORWARD_ADMINER_PORT:-8080}:8080"
+        volumes:
+            - ./.docker/adminer/login-default-credentials.php:/var/www/html/plugins-enabled/login-default-credentials.php
+        restart: unless-stopped
+        depends_on:
+            - database
+
+volumes:
+    mailpitdata:
+    mysqldata:
+    redisdata:
