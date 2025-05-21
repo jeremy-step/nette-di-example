@@ -1,0 +1,7 @@
+services:
+    database.mysql:
+        create: PDO('mysql:host=%mysql.host%;dbname=%mysql.db%', %mysql.user%, %mysql.pass%)
+        autowired: false
+    - App\Models\AppRepository(@database.mysql)
+    boot: App\Boot
+    output: App\UI\Output

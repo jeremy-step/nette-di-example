@@ -5,7 +5,7 @@
 ## Create a new project from this template repository
 
 ```shell
-gh repo create my-new-project --template cima-alfa/docker-web-development --clone [--private]
+gh repo create my-new-project --template cima-alfa/docker-web-development --clone --private|public|internal
 ```
 
 or just clone it without creating a new repository...

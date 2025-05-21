@@ -1,0 +1,17 @@
+parameters:
+    mysql:
+        host: ::getenv(MYSQL_HOST)
+        port: ::getenv(MYSQL_PORT)
+        user: ::getenv(MYSQL_USER)
+        pass: ::getenv(MYSQL_PASSWORD)
+        db: ::getenv(MYSQL_DATABASE)
+    languages: [cs, en, de]
+    paramTrue: true
+    paramFalse: false
+    paramNull: null
+    paramString: string
+
+di:
+    debugger: false # Solo funciona con Nette Tracy
+    export:
+        parameters: false
